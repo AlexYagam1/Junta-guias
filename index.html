@@ -33,10 +33,43 @@
         </div>
     </div>
 
+    <!-- Modal para confirmações -->
+    <div id="modal-confirmacao" class="modal">
+        <div class="modal-conteudo">
+            <div class="modal-cabecalho">
+                <h3 id="modal-titulo">Confirmação</h3>
+                <span class="modal-fechar">&times;</span>
+            </div>
+            <div class="modal-corpo">
+                <p id="modal-mensagem"></p>
+            </div>
+            <div class="modal-rodape">
+                <button id="modal-btn-cancelar" class="btn-modal btn-cancelar">Cancelar</button>
+                <button id="modal-btn-confirmar" class="btn-modal btn-confirmar">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para alertas -->
+    <div id="modal-alerta" class="modal">
+        <div class="modal-conteudo">
+            <div class="modal-cabecalho">
+                <h3 id="modal-alerta-titulo">Aviso</h3>
+                <span class="modal-alerta-fechar">&times;</span>
+            </div>
+            <div class="modal-corpo">
+                <p id="modal-alerta-mensagem"></p>
+            </div>
+            <div class="modal-rodape">
+                <button id="modal-alerta-btn-ok" class="btn-modal btn-confirmar">OK</button>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <p>Desenvolvido por IAlexYagamiI com DeepSeek para facilitar rotina de juntar guias.</p>
         <br>
-        <p>Versão do projeto: 3.0 (GCC - COMPESA)</p>
+        <p>Versão do projeto: 3.1 Snapshot (GCC - COMPESA)</p>
     </footer>
 
     <style>
@@ -331,6 +364,94 @@
             font-size: 14px;
         }
 
+        /* Estilos para os modais */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-conteudo {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 500px;
+            overflow: hidden;
+        }
+
+        .modal-cabecalho {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-image: linear-gradient(to right, #2980b9, #2980b9, #44ce57) ;
+            color: white;
+        }
+
+        .modal-cabecalho h3 {
+            margin: 0;
+            color: white;
+        }
+
+        .modal-fechar, .modal-alerta-fechar {
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+        }
+
+        .modal-fechar:hover, .modal-alerta-fechar:hover {
+            color: #db301d;
+        }
+
+        .modal-corpo {
+            padding: 20px;
+        }
+
+        .modal-rodape {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 15px 20px;
+            background-color: #f9fafc;
+            border-top: 1px solid #e1e8ed;
+        }
+
+        .btn-modal {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-confirmar {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .btn-confirmar:hover {
+            background-color: #27ae60;
+        }
+
+        .btn-cancelar {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-cancelar:hover {
+            background-color: #c0392b;
+        }
+
         @media (max-width: 768px) {
             .area-arquivos {
                 flex-direction: column;
@@ -348,6 +469,10 @@
             }
             
             .botoes-acao {
+                flex-direction: column;
+            }
+            
+            .modal-rodape {
                 flex-direction: column;
             }
         }
@@ -369,59 +494,110 @@
             document.getElementById('btn-adicionar-processo').addEventListener('click', adicionarProcesso);
             document.getElementById('btn-juntar-pdfs').addEventListener('click', juntarPDFs);
             document.getElementById('btn-limpar-tudo').addEventListener('click', limparTudo);
+            
+            // Event listeners para os modais
+            document.querySelector('.modal-fechar').addEventListener('click', function() {
+                document.getElementById('modal-confirmacao').style.display = 'none';
+            });
+            
+            document.querySelector('.modal-alerta-fechar').addEventListener('click', function() {
+                document.getElementById('modal-alerta').style.display = 'none';
+            });
+            
+            document.getElementById('modal-btn-cancelar').addEventListener('click', function() {
+                document.getElementById('modal-confirmacao').style.display = 'none';
+            });
+            
+            document.getElementById('modal-alerta-btn-ok').addEventListener('click', function() {
+                document.getElementById('modal-alerta').style.display = 'none';
+            });
+            
+            // Fechar modal ao clicar fora dele
+            window.addEventListener('click', function(event) {
+                const modalConfirmacao = document.getElementById('modal-confirmacao');
+                const modalAlerta = document.getElementById('modal-alerta');
+                
+                if (event.target === modalConfirmacao) {
+                    modalConfirmacao.style.display = 'none';
+                }
+                
+                if (event.target === modalAlerta) {
+                    modalAlerta.style.display = 'none';
+                }
+            });
         });
+
+        // Função para mostrar modal de confirmação
+        function mostrarConfirmacao(mensagem, callbackConfirmar) {
+            const modal = document.getElementById('modal-confirmacao');
+            document.getElementById('modal-mensagem').textContent = mensagem;
+            modal.style.display = 'flex';
+            
+            // Configurar botão de confirmação
+            const btnConfirmar = document.getElementById('modal-btn-confirmar');
+            btnConfirmar.onclick = function() {
+                modal.style.display = 'none';
+                if (callbackConfirmar) callbackConfirmar();
+            };
+        }
+
+        // Função para mostrar modal de alerta
+        function mostrarAlerta(mensagem, titulo = 'Aviso') {
+            const modal = document.getElementById('modal-alerta');
+            document.getElementById('modal-alerta-mensagem').textContent = mensagem;
+            document.getElementById('modal-alerta-titulo').textContent = titulo;
+            modal.style.display = 'flex';
+        }
 
         // Função para limpar todos os campos (exceto documento 1 do primeiro processo)
         function limparTudo() {
-            if (!confirm('Isso irá limpar todos os campos e processos adicionais, mantendo apenas o primeiro processo com seu documento 1. Deseja continuar?')) {
-                return;
-            }
-            
-            // Remove todos os processos exceto o primeiro
-            const processosContainer = document.getElementById('processos-container');
-            const todosProcessos = processosContainer.querySelectorAll('.processo');
-            
-            for (let i = todosProcessos.length - 1; i > 0; i--) {
-                todosProcessos[i].remove();
-            }
-            
-            // Limpa os campos do primeiro processo, exceto o documento 1
-            const processo0 = processos[0];
-            if (processo0) {
-                // Limpa o campo de filtro
-                document.querySelector('.filtro-texto[data-processo="0"]').value = '';
+            mostrarConfirmacao('Isso irá limpar todos os campos e processos adicionais, mantendo apenas o primeiro processo com seu documento 1. Deseja continuar?', function() {
+                // Remove todos os processos exceto o primeiro
+                const processosContainer = document.getElementById('processos-container');
+                const todosProcessos = processosContainer.querySelectorAll('.processo');
                 
-                // Limpa o segundo arquivo
-                processo0.arquivo2 = null;
-                processo0.paginasComTexto2 = [];
-                processo0.paginasSelecionadas2 = [];
-                processo0.paginasFiltradas2 = [];
-                
-                // Atualiza a interface do segundo arquivo
-                document.getElementById('info-arquivo-2-0').textContent = '';
-                document.getElementById('paginas-2-0').innerHTML = '';
-                document.getElementById('input-arquivo-2-0').value = '';
-                
-                // Reseta as seleções do primeiro arquivo
-                processo0.paginasSelecionadas1 = [];
-                
-                // Atualiza a interface do primeiro arquivo (mantém o arquivo, apenas limpa seleções)
-                if (processo0.arquivo1) {
-                    document.getElementById('info-arquivo-1-0').textContent = `Arquivo: ${processo0.arquivo1.name}`;
-                    exibirPaginas(0, 1, processo0.paginasComTexto1);
+                for (let i = todosProcessos.length - 1; i > 0; i--) {
+                    todosProcessos[i].remove();
                 }
                 
-                // Reseta o checkbox de filtro
-                document.getElementById('filtro-segundo-0').checked = true;
-                processo0.filtrarSegundo = true;
-            }
-            
-            // Reseta o array de processos para conter apenas o primeiro
-            processos = [processos[0]];
-            contadorProcessos = 1;
-            
-            // Limpa o campo do nome do processo
-            document.getElementById('nome-processo').value = '';
+                // Limpa os campos do primeiro processo, exceto o documento 1
+                const processo0 = processos[0];
+                if (processo0) {
+                    // Limpa o campo de filtro
+                    document.querySelector('.filtro-texto[data-processo="0"]').value = '';
+                    
+                    // Limpa o segundo arquivo
+                    processo0.arquivo2 = null;
+                    processo0.paginasComTexto2 = [];
+                    processo0.paginasSelecionadas2 = [];
+                    processo0.paginasFiltradas2 = [];
+                    
+                    // Atualiza a interface do segundo arquivo
+                    document.getElementById('info-arquivo-2-0').textContent = '';
+                    document.getElementById('paginas-2-0').innerHTML = '';
+                    document.getElementById('input-arquivo-2-0').value = '';
+                    
+                    // Reseta as seleções do primeiro arquivo
+                    processo0.paginasSelecionadas1 = [];
+                    
+                    // Atualiza a interface do primeiro arquivo (mantém o arquivo, apenas limpa seleções)
+                    if (processo0.arquivo1) {
+                        document.getElementById('info-arquivo-1-0').textContent = `Arquivo: ${processo0.arquivo1.name}`;
+                        exibirPaginas(0, 1, processo0.paginasComTexto1);
+                    }
+                    
+                    // Reseta o checkbox de filtro
+                    document.getElementById('filtro-segundo-0').checked = true;
+                    processo0.filtrarSegundo = true;
+                }
+                
+                // Reseta o array de processos para conter apenas o primeiro
+                processos = [processos[0]];
+                contadorProcessos = 1;
+                
+                // Limpa o campo do nome do processo
+                document.getElementById('nome-processo').value = '';
+            });
         }
 
         // Função para adicionar um novo processo
@@ -527,12 +703,12 @@
                     
                     // Se for o campo 1 do primeiro processo, pedir confirmação
                     if (tipo === '1' && idProcesso === '0') {
-                        if (!confirm('Tem certeza que deseja limpar o documento 1 do primeiro processo? Isso afetará todos os processos que dependem dele.')) {
-                            return;
-                        }
+                        mostrarConfirmacao('Tem certeza que deseja limpar o documento 1 do primeiro processo? Isso afetará todos os processos que dependem dele.', function() {
+                            limparArquivo(tipo, idProcesso);
+                        });
+                    } else {
+                        limparArquivo(tipo, idProcesso);
                     }
-                    
-                    limparArquivo(tipo, idProcesso);
                 });
             });
             
@@ -618,7 +794,7 @@
         // Carregar arquivo PDF
         async function carregarArquivo(arquivo, tipo, idProcesso) {
             if (!arquivo || arquivo.type !== 'application/pdf') {
-                alert('Por favor, selecione um arquivo PDF válido.');
+                mostrarAlerta('Por favor, selecione um arquivo PDF válido.', 'Erro');
                 return;
             }
             
@@ -901,7 +1077,7 @@
             
             // Verificar se o nome do processo está em branco
             if (!nomeProcesso) {
-                mensagemConfirmacao += 'Nome do processo está em branco.\n\n';
+                mensagemConfirmacao += 'Nome do processo está em branco. \n\n';
             }
             
             // Verificar se há processos sem segundo PDF
@@ -911,13 +1087,18 @@
             
             // Se houver algo para confirmar, mostrar a mensagem
             if (mensagemConfirmacao) {
-                mensagemConfirmacao += 'Deseja continuar mesmo assim? Clique em "Cancelar" para corrigir os problemas.';
+                mensagemConfirmacao += 'Deseja continuar mesmo assim?';
                 
-                if (!confirm(mensagemConfirmacao)) {
-                    return; // Usuário cancelou
-                }
+                mostrarConfirmacao(mensagemConfirmacao, async function() {
+                    await processarJuncaoPDFs(nomeProcesso);
+                });
+            } else {
+                await processarJuncaoPDFs(nomeProcesso);
             }
-            
+        }
+        
+        // Função para processar a junção de PDFs (separada para reutilização)
+        async function processarJuncaoPDFs(nomeProcesso) {
             try {
                 const pdfFinal = await PDFLib.PDFDocument.create();
                 
@@ -971,11 +1152,12 @@
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
                 
-                //alert('PDF combinado com sucesso! O download começará automaticamente.');
+                // Mostrar mensagem de sucesso
+                mostrarAlerta('PDF combinado com sucesso! O download começará automaticamente.', 'Sucesso');
                 
             } catch (error) {
                 console.error('Erro ao juntar PDFs:', error);
-                alert('Erro ao juntar os PDFs. Verifique se todos os arquivos foram carregados corretamente.');
+                mostrarAlerta('Erro ao juntar os PDFs. Verifique se todos os arquivos foram carregados corretamente.', 'Erro');
             }
         }
     </script>
