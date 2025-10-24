@@ -21,14 +21,16 @@
         </div>
 
         <div class="acoes">
+            <div class="botoes-acao">
+                <button id="btn-adicionar-processo" class="btn-acao btn-adicionar">+ Adicionar Boleto ao processo</button>
+            </div>
             <div class="nome-processo-container">
                 <label for="nome-processo">Nº do processo:</label>
                 <input type="text" id="nome-processo" class="nome-processo" placeholder="Digite o número do processo">
             </div>
             <div class="botoes-acao">
-                <button id="btn-adicionar-processo" class="btn-acao btn-adicionar">+ Adicionar Boleto ao processo</button>
-                <button id="btn-juntar-pdfs" class="btn-acao btn-juntar">Juntar Comprovante</button>
                 <button id="btn-limpar-tudo" class="btn-acao btn-limpar-tudo">Limpar Tudo</button>
+                <button id="btn-juntar-pdfs" class="btn-acao btn-juntar">Juntar Comprovante</button>
             </div>
         </div>
     </div>
@@ -61,6 +63,7 @@
                 <p id="modal-alerta-mensagem"></p>
             </div>
             <div class="modal-rodape">
+                <button id="modal-alerta-btn-limpar" class="btn-modal btn-limpar-tudo-modal" style="display: none;">Limpar Tudo</button>
                 <button id="modal-alerta-btn-ok" class="btn-modal btn-confirmar">OK</button>
             </div>
         </div>
@@ -69,7 +72,7 @@
     <footer>
         <p>Desenvolvido por IAlexYagamiI com DeepSeek para facilitar rotina de juntar guias.</p>
         <br>
-        <p>Versão do projeto: 3.1 Snapshot (GCC - COMPESA)</p>
+        <p>Versão do projeto: 3.2 Snapshot (GCC - COMPESA)</p>
     </footer>
 
     <style>
@@ -234,7 +237,7 @@
         }
 
         .btn-limpar:hover {
-            background-color: #d35400;
+            background-color: #d32a00;
         }
 
         .paginas-container {
@@ -320,7 +323,7 @@
         }
 
         .btn-adicionar {
-            background-color: #2ecc71;
+            background-color: #44ce57;
             color: white;
         }
 
@@ -343,7 +346,7 @@
         }
 
         .btn-limpar-tudo:hover {
-            background-color: #d35400;
+            background-color: #d35f00;
         }
 
         .info-arquivo {
@@ -387,13 +390,24 @@
             overflow: hidden;
         }
 
+        /* Cabeçalho do modal padrão (sucesso) */
         .modal-cabecalho {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 15px 20px;
-            background-image: linear-gradient(to right, #2980b9, #2980b9, #44ce57) ;
+            background-image: linear-gradient(to right, #2980b9, #2980b9, #44ce57);
             color: white;
+        }
+
+        /* Cabeçalho do modal de erro */
+        .modal-conteudo.erro .modal-cabecalho {
+            background-image: linear-gradient(to right, #ec6051, #ec6051, #c0392b);
+        }
+
+        /* Cabeçalho do modal de alerta */
+        .modal-conteudo.alerta .modal-cabecalho {
+            background-image: linear-gradient(to right, #e67e22, #e67e22, #d35400);
         }
 
         .modal-cabecalho h3 {
@@ -418,7 +432,7 @@
 
         .modal-rodape {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
             gap: 10px;
             padding: 15px 20px;
             background-color: #f9fafc;
@@ -450,6 +464,15 @@
 
         .btn-cancelar:hover {
             background-color: #c0392b;
+        }
+
+        .btn-limpar-tudo-modal {
+            background-color: #e67e22;
+            color: white;
+        }
+
+        .btn-limpar-tudo-modal:hover {
+            background-color: #d35400;
         }
 
         @media (max-width: 768px) {
@@ -511,6 +534,12 @@
             document.getElementById('modal-alerta-btn-ok').addEventListener('click', function() {
                 document.getElementById('modal-alerta').style.display = 'none';
             });
+
+            // Event listener para o botão de limpar no modal
+            document.getElementById('modal-alerta-btn-limpar').addEventListener('click', function() {
+                document.getElementById('modal-alerta').style.display = 'none';
+                limparTudo();
+            });
             
             // Fechar modal ao clicar fora dele
             window.addEventListener('click', function(event) {
@@ -528,8 +557,13 @@
         });
 
         // Função para mostrar modal de confirmação
-        function mostrarConfirmacao(mensagem, callbackConfirmar) {
+        function mostrarConfirmacao(mensagem, callbackConfirmar, tipo = 'alerta') {
             const modal = document.getElementById('modal-confirmacao');
+            const modalConteudo = modal.querySelector('.modal-conteudo');
+            
+            // Aplicar classe de tipo
+            modalConteudo.className = 'modal-conteudo ' + tipo;
+            
             document.getElementById('modal-mensagem').textContent = mensagem;
             modal.style.display = 'flex';
             
@@ -542,16 +576,30 @@
         }
 
         // Função para mostrar modal de alerta
-        function mostrarAlerta(mensagem, titulo = 'Aviso') {
+        function mostrarAlerta(mensagem, titulo = 'Aviso', tipo = 'alerta', mostrarBotaoLimpar = false) {
             const modal = document.getElementById('modal-alerta');
+            const modalConteudo = modal.querySelector('.modal-conteudo');
+            const btnLimpar = document.getElementById('modal-alerta-btn-limpar');
+            
+            // Aplicar classe de tipo
+            modalConteudo.className = 'modal-conteudo ' + tipo;
+            
             document.getElementById('modal-alerta-mensagem').textContent = mensagem;
             document.getElementById('modal-alerta-titulo').textContent = titulo;
+            
+            // Mostrar ou ocultar botão de limpar
+            if (mostrarBotaoLimpar) {
+                btnLimpar.style.display = 'block';
+            } else {
+                btnLimpar.style.display = 'none';
+            }
+            
             modal.style.display = 'flex';
         }
 
         // Função para limpar todos os campos (exceto documento 1 do primeiro processo)
         function limparTudo() {
-            mostrarConfirmacao('Isso irá limpar todos os campos e processos adicionais, mantendo apenas o primeiro processo com seu documento 1. Deseja continuar?', function() {
+            mostrarConfirmacao('Isso limpará todos os campos com documentos anexados, exceto o documento do Comprovante geral no primeiro anexo. \n Deseja continuar?', function() {
                 // Remove todos os processos exceto o primeiro
                 const processosContainer = document.getElementById('processos-container');
                 const todosProcessos = processosContainer.querySelectorAll('.processo');
@@ -768,7 +816,7 @@
                 e.stopPropagation();
             }
             
-            ['dragenter', 'dragover'].forEach(eventName => {
+            ['dragenter', 'dragoover'].forEach(eventName => {
                 area.addEventListener(eventName, highlight, false);
             });
             
@@ -794,7 +842,7 @@
         // Carregar arquivo PDF
         async function carregarArquivo(arquivo, tipo, idProcesso) {
             if (!arquivo || arquivo.type !== 'application/pdf') {
-                mostrarAlerta('Por favor, selecione um arquivo PDF válido.', 'Erro');
+                mostrarAlerta('Por favor, selecione um arquivo PDF válido.', 'Erro', 'erro');
                 return;
             }
             
@@ -1091,7 +1139,7 @@
                 
                 mostrarConfirmacao(mensagemConfirmacao, async function() {
                     await processarJuncaoPDFs(nomeProcesso);
-                });
+                }, 'alerta');
             } else {
                 await processarJuncaoPDFs(nomeProcesso);
             }
@@ -1152,12 +1200,12 @@
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
                 
-                // Mostrar mensagem de sucesso
-                mostrarAlerta('PDF combinado com sucesso! O download começará automaticamente.', 'Sucesso');
+                // Mostrar mensagem de sucesso com botão de limpar
+                mostrarAlerta('PDF combinado com sucesso! O download começará automaticamente.', 'Sucesso', '', true);
                 
             } catch (error) {
                 console.error('Erro ao juntar PDFs:', error);
-                mostrarAlerta('Erro ao juntar os PDFs. Verifique se todos os arquivos foram carregados corretamente.', 'Erro');
+                mostrarAlerta('Erro ao juntar os PDFs. Verifique se todos os arquivos foram carregados corretamente.', 'Erro', 'erro');
             }
         }
     </script>
