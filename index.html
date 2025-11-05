@@ -27,6 +27,8 @@
             <div class="nome-processo-container">
                 <label for="nome-processo">Nº do processo:</label>
                 <input type="text" id="nome-processo" class="nome-processo" placeholder="Digite o número do processo">
+                <!-- Botão para colar no Nome do processo -->
+                <button id="btn-colar-nome-processo" class="btn-colar">Colar</button>
             </div>
             <div class="botoes-acao">
                 <button id="btn-limpar-tudo" class="btn-acao btn-limpar-tudo">Limpar Tudo</button>
@@ -72,7 +74,7 @@
     <footer>
         <p>Desenvolvido por IAlexYagamiI com DeepSeek para facilitar rotina de juntar guias.</p>
         <br>
-        <p>Versão do projeto: 3.2 Snapshot (GCC - COMPESA)</p>
+        <p>Versão do projeto: 3.3 Snapshot (GCC - COMPESA)</p>
     </footer>
 
     <style>
@@ -148,8 +150,9 @@
         }
 
         .checkbox-filtro input {
-            width: 18px;
-            height: 18px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
         }
 
         .remover-processo {
@@ -254,6 +257,7 @@
         .pag-nao-corresp{
             font-weight: bold;
         }
+
         .pagina-item {
             display: flex;
             align-items: center;
@@ -268,7 +272,7 @@
             background-color: #edf2f7;
         }
 
-        .pagina-item.selecionada {
+        .pagina-item.selecionada{
             background-color: #e1f0fa;
         }
 
@@ -349,7 +353,7 @@
             background-color: #d35f00;
         }
 
-        .info-arquivo {
+        .info-arquivo{
             margin-top: 10px;
             font-size: 14px;
             font-weight: bold;
@@ -475,6 +479,24 @@
             background-color: #d35400;
         }
 
+        /* Estilo do botão de colar adicionado */
+        .btn-colar {
+            background-color: #2F8ECD;
+            border: 1px solid #2F8ECD;
+            color: white;
+            padding: 9px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-colar:hover {
+            background-color: #44CE57;
+        }
+
         @media (max-width: 768px) {
             .area-arquivos {
                 flex-direction: column;
@@ -554,6 +576,31 @@
                     modalAlerta.style.display = 'none';
                 }
             });
+
+            // --- Configuração do botão "Colar" para Nome do processo ---
+            const btnColarNome = document.getElementById('btn-colar-nome-processo');
+            if (btnColarNome) {
+                btnColarNome.addEventListener('click', async function() {
+                    const input = document.getElementById('nome-processo');
+                    await pasteToInput(input);
+                });
+            }
+
+            // Atalho Ctrl/Cmd+V para o campo nome-processo (vai tentar colar via API de clipboard; se não disponível, deixa o comportamento nativo)
+            const nomeProcessoInput = document.getElementById('nome-processo');
+            if (nomeProcessoInput) {
+                nomeProcessoInput.addEventListener('keydown', async function(e) {
+                    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
+                        // Previne comportamento nativo e usa clipboard API quando disponível
+                        try {
+                            e.preventDefault();
+                            await pasteToInput(nomeProcessoInput);
+                        } catch (err) {
+                            // Se falhar, não fazer nada — mantém comportamento nativo
+                        }
+                    }
+                });
+            }
         });
 
         // Função para mostrar modal de confirmação
@@ -648,6 +695,28 @@
             });
         }
 
+        // Função auxiliar: cola texto da área de transferência no input fornecido
+        async function pasteToInput(inputElement) {
+            if (!inputElement) return;
+            try {
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    const text = await navigator.clipboard.readText();
+                    if (text !== undefined && text !== null) {
+                        inputElement.value = text;
+                        // Disparar evento input para que quaisquer listeners (ex: filtrarPaginas) sejam acionados
+                        const ev = new Event('input', { bubbles: true });
+                        inputElement.dispatchEvent(ev);
+                    }
+                } else {
+                    // Fallback: tentar permitir colagem nativa (apenas mostra aviso)
+                    mostrarAlerta('API de área de transferência não disponível neste navegador. Use Ctrl/Cmd+V diretamente no campo.', 'Aviso', 'alerta');
+                }
+            } catch (err) {
+                // Se houver erro de permissão ou outro, avisar o usuário
+                mostrarAlerta('Não foi possível acessar a área de transferência. Verifique permissões do navegador.', 'Erro', 'erro');
+            }
+        }
+
         // Função para adicionar um novo processo
         function adicionarProcesso() {
             const processosContainer = document.getElementById('processos-container');
@@ -664,8 +733,10 @@
                     <div class="processo-header">
                         <div class="filtro-container">
                             <input type="text" class="filtro-texto" placeholder="Digite o NOSSO NÚMERO do comprovante e boleto." data-processo="${idProcesso}">
+                            <!-- Botão Colar junto ao filtro (NOSSO NÚMERO) -->
+                            <button class="btn-colar" id="btn-colar-filtro-${idProcesso}" >Colar</button>
                             <div class="checkbox-filtro">
-                                <input type="checkbox" id="filtro-segundo-${idProcesso}" data-processo="${idProcesso}" checked>
+                                <input type="checkbox" class="markbox" id="filtro-segundo-${idProcesso}" data-processo="${idProcesso}" checked>
                                 <label for="filtro-segundo-${idProcesso}">Checar <b>nosso número</b> em ambos</label>
                             </div>
                         </div>
@@ -777,10 +848,31 @@
             configurarAreaDrop(areaArquivo2, 2, idProcesso);
             
             // Event listener para o campo de filtro
-            document.querySelector(`.filtro-texto[data-processo="${idProcesso}"]`).addEventListener('input', function() {
+            const filtroInput = document.querySelector(`.filtro-texto[data-processo="${idProcesso}"]`);
+            filtroInput.addEventListener('input', function() {
                 filtrarPaginas(this.value, idProcesso);
             });
-            
+
+            // Atalho Ctrl/Cmd+V para o campo filtro (vai tentar colar via API de clipboard)
+            filtroInput.addEventListener('keydown', async function(e) {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
+                    try {
+                        e.preventDefault();
+                        await pasteToInput(filtroInput);
+                    } catch (err) {
+                        // se falhar, deixa comportamento nativo
+                    }
+                }
+            });
+
+            // Event listener para o botão "colar" ao lado do filtro
+            const btnColarFiltro = document.getElementById(`btn-colar-filtro-${idProcesso}`);
+            if (btnColarFiltro) {
+                btnColarFiltro.addEventListener('click', async function() {
+                    await pasteToInput(filtroInput);
+                });
+            }
+
             // Event listener para o checkbox de filtro do segundo PDF
             document.getElementById(`filtro-segundo-${idProcesso}`).addEventListener('change', function() {
                 processos[idProcesso].filtrarSegundo = this.checked;
@@ -1208,6 +1300,7 @@
                 mostrarAlerta('Erro ao juntar os PDFs. Verifique se todos os arquivos foram carregados corretamente.', 'Erro', 'erro');
             }
         }
+
     </script>
 </body>
 </html>
